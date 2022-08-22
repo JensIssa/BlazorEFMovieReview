@@ -14,6 +14,11 @@ public class RepositoryDbContext : Microsoft.EntityFrameworkCore.DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+
+        List<Review> mockReviews = new List<Review>();
+        Review newReview = new Review();
+        mockReviews.Add(newReview);
+        
         //Generating new ID everytime a movie object gets added
         modelBuilder.Entity<Movie>().
             Property(f => f.Id).
@@ -27,6 +32,11 @@ public class RepositoryDbContext : Microsoft.EntityFrameworkCore.DbContext
             WithMany(movie => movie.Reviews)
             .HasForeignKey(review => review.MovieId).
             OnDelete(DeleteBehavior.Cascade);
+        
+        modelBuilder.Entity<Movie>().HasData(new Movie
+        {
+            BoxOfficeSumInMillions = 42, Id = -1, ReleaseYear = 1999, Reviews = mockReviews, Summary = "super gewd",
+            Title = "Dark, The Batman Knight" });
     }
 
     public DbSet<Movie> MovieTable { get; set; }
