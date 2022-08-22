@@ -1,5 +1,6 @@
 ﻿using Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 
 namespace Infrastructure;
@@ -30,32 +31,61 @@ public class Repository :  IRepository
 
     public List<Review> GetReviews()
     {
-        return new List<Review>() { mockReviewObject };
+        using (var context = new RepositoryDbContext( _opts, ServiceLifetime.Scoped))
+        {
+            return context.ReviewTable.Include(a => a.Movie).ToList();
+        }
     }
 
     public List<Movie> GetMovies()
     {
-        return new List<Movie>() { mockMovieObject };
+        using (var context = new RepositoryDbContext(_opts, ServiceLifetime.Scoped))
+        {
+            return context.MovieTable.ToList();
+        }
     }
 
     public Movie DeleteMovie(int movieId)
     {
-        return new Movie();
+        using (var context = new RepositoryDbContext(_opts, ServiceLifetime.Scoped))
+        {
+            var movie = context.MovieTable.Find(movieId);
+            context.MovieTable.Remove(movie ?? throw new InvalidOperationException());
+            context.SaveChanges();
+            return movie;
+        }
     }
 
     public Review DeleteReview(int reviewId)
     {
-        return new Review();
+        using (var context = new RepositoryDbContext(_opts, ServiceLifetime.Scoped))
+        {
+            var review = context.ReviewTable.Find(reviewId);
+            context.ReviewTable.Remove(review ?? throw new InvalidOperationException());
+            context.SaveChanges();
+            return review;
+        }    
     }
 
     public Movie AddMovie(Movie movie)
     {
-        return movie;
+        using (var context = new RepositoryDbContext(_opts, ServiceLifetime.Scoped))
+        {
+            context.MovieTable.Add(movie);
+            context.SaveChanges();
+            return movie;
+        }
     }
 
     public Review AddReview(Review review)
     {
-        review.Movie = new Movie();
-        return review;
+        using (var context = new RepositoryDbContext(_opts, ServiceLifetime.Scoped))
+        {
+            var m = context.MovieTable.Find(review.MovieId) ?? throw new InvalidOperationException();
+            review.Movie = m;
+            context.ReviewTable.Add(review);
+            context.SaveChanges();
+            return review;
+        }
     }
 }
